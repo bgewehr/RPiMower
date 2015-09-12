@@ -1,0 +1,15 @@
+This is my python project for a robot that can possibly mow the lawn dome days.
+
+it consists of 
+
+HARDWARE
+- a raspberry pi 2 B+
+- a raspberry pi camera
+- a l298 motor controller
+- a 11.1V LiPo battery
+- a ultrasonic sensor SD04
+
+SOFTWARE
+- mosquitto MQTT broker
+- some python daemons for the sensors
+- a python daemon which controls the robot
