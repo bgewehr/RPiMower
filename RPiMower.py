@@ -165,8 +165,8 @@ def compass_turn(target):
                 #Rechtsrum ist kuerzester Weg
                 move.right180(DC, DC)
         time.sleep(0.025)
-        #move.stop()
-        #time.sleep(0.1)
+        move.stop()
+        time.sleep(0.1)
 
 def build_map():
     global WORLD
@@ -184,8 +184,10 @@ def build_map():
         print "Turning to angle: ", target
         compass_turn(target)
         print "World Map: ", target, WORLD[W_FRONT_SONAR]
-        WORLD[W_MAP].insert(target, WORLD[W_FRONT_SONAR])
+        WORLD[W_MAP].append([target, WORLD[W_FRONT_SONAR]])
     print WORLD[W_MAP]
+    WORLD_CARTESIAN = [[int(np.cos(np.radians(i[0]))*float(i[1])*10)/10, int(np.sin(np.radians(i[0]))*float(i[1])*10)/10] for i in WORLD[W_MAP]]
+    print WORLD_CARTESIAN
     move.stop()
     #Stop = True
 

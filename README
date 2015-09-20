@@ -7,12 +7,13 @@ HARDWARE
 - a raspberry pi camera
 - a l298 motor controller
 - a 11.1V LiPo battery
-- a ultrasonic sensor SD04
+- an ultrasonic sensor SD04
+- a compass device hcm5883L
 
 SOFTWARE
 - raspian wheezy
 - mosquitto MQTT broker
-- some python MQTT daemons for the sensors
+- some python MQTT daemons for the sensors, running as seperate python tasks
 - a python daemon which subscribes to the sensors via MQTT and controls the robot according to the Sensor data
 
 The main idea is to have a world describing variable in the main program which gets sensor data by subscribing to the sensors channels on the MQTT broker on the same machine. Therefore the sensors push their data as often as possible to the MQTT broker and they don't care what happens after sending them out. 
