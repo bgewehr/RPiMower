@@ -1,4 +1,4 @@
-This is my python project for a robot that can possibly mow the lawn dome days.
+This is my python project for a robot that can possibly mow the lawn some days.
 
 it consists of 
 
@@ -10,6 +10,11 @@ HARDWARE
 - a ultrasonic sensor SD04
 
 SOFTWARE
+- raspian wheezy
 - mosquitto MQTT broker
-- some python daemons for the sensors
-- a python daemon which controls the robot
+- some python MQTT daemons for the sensors
+- a python daemon which subscribes to the sensors via MQTT and controls the robot according to the Sensor data
+
+The main idea is to have a world describing variable in the main program which gets sensor data by subscribing to the sensors channels on the MQTT broker on the same machine. Therefore the sensors push their data as often as possible to the MQTT broker and they don't care what happens after sending them out. 
+
+This way I got a high resolution parallel working sensor network with low complexity and cpu consumption.
