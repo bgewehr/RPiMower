@@ -8,7 +8,7 @@ HARDWARE
 - a l298 motor controller
 - a 11.1V LiPo battery
 - an ultrasonic sensor SD04
-- a compass device hcm5883L
+- a compass device hmc5883L
 
 SOFTWARE
 - raspian wheezy
