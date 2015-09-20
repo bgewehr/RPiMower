@@ -147,8 +147,9 @@ def detect_blocking(point):
     return std < 1
 
 def compass_turn(target):
-    DC = 90
-    while abs(target - WORLD[W_COMPASS]) > 2:
+    DC = 100
+    while abs(target - WORLD[W_COMPASS]) > 3:
+        print "from - to: ", WORLD[W_COMPASS], target
         if WORLD[W_COMPASS] < target:
             if abs(WORLD[W_COMPASS] - target)<180:
                 #Rechtsrum ist kuerzester Weg
@@ -163,7 +164,9 @@ def compass_turn(target):
             else:
                 #Rechtsrum ist kuerzester Weg
                 move.right180(DC, DC)
-        time.sleep(0.001)
+        time.sleep(0.025)
+        #move.stop()
+        #time.sleep(0.1)
 
 def build_map():
     global WORLD
@@ -172,13 +175,13 @@ def build_map():
     # wait for the first real compass result
     time.sleep(2)
     current_angle = WORLD[W_COMPASS]
-    print "Starting at angle = ", current_angle
+    print "Starting at angle: ", current_angle
     for angle in range(current_angle, current_angle + 359, 2):
         if angle > 360:
             target = angle - 360
         else:
             target = angle
-        print "Turning to: ", target
+        print "Turning to angle: ", target
         compass_turn(target)
         print "World Map: ", target, WORLD[W_FRONT_SONAR]
         WORLD[W_MAP].insert(target, WORLD[W_FRONT_SONAR])
