@@ -1,8 +1,10 @@
+# ${1:RPiMower}
+
 This is my python project for a robot that can possibly mow the lawn some days.
 
 it consists of 
 
-HARDWARE
+## Hardware
 - a raspberry pi 2 B+
 - a raspberry pi camera
 - a l298 motor controller
@@ -10,7 +12,8 @@ HARDWARE
 - an ultrasonic sensor SD04
 - a compass device hmc5883L
 
-SOFTWARE
+
+## Software
 - raspian wheezy
 - mosquitto MQTT broker
 - some python MQTT daemons for the sensors, running as seperate python tasks
