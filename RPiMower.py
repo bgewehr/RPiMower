@@ -38,6 +38,7 @@ MIN_DISTANCE = 20
 
 WORLD = ["FrontUS",0,"BackUS",0,"GroundColor",0, "Compass",0, "map",[]]
 W_FRONT_SONAR = 1
+W_BACK_SONAR = 1
 W_BACK_SONAR = 3
 W_GROUND_COLOUR = 5
 W_COMPASS = 7
@@ -185,11 +186,12 @@ def build_map():
         compass_turn(target)
         print "World Map: ", target, WORLD[W_FRONT_SONAR]
         WORLD[W_MAP].append([target, WORLD[W_FRONT_SONAR]])
-    print WORLD[W_MAP]
+    #print WORLD[W_MAP]
     WORLD_CARTESIAN = [[int(np.cos(np.radians(i[0]))*float(i[1])*10)/10, int(np.sin(np.radians(i[0]))*float(i[1])*10)/10] for i in WORLD[W_MAP]]
-    print WORLD_CARTESIAN
+    #print WORLD_CARTESIAN
+    MQTT.mqttc.publish("/RPiMower/World/Cartesian", str(WORLD_CARTESIAN))
     move.stop()
-    #Stop = True
+    Stop = True
 
 
 def return_home():
@@ -220,9 +222,11 @@ def mow():
         if k == 10:
             #if DEBUG:
             print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
-            #MQTT.mqttc.publish("/RPiMower/World/data", str(WORLD))
-            #mqttc.publish("/RPiMower/World/BackUS", WORLD[WORLD_BACK_US], qos=0, retain=True)
-            #mqttc.publish("/RPiMower/World/GroundColor", WORLD[WORLD_GROUND_COLOR], qos=0, retain=True)
+            #MQTT.mqttc.publish("/RPiMower/World/Polar", str(WORLD[W_MAP]), qos=0, retain=True)
+            MQTT.mqttc.publish("/RPiMower/World/Compass", str(WORLD[W_COMPASS]), qos=0, retain=True)
+            MQTT.mqttc.publish("/RPiMower/World/FrontUS", str(WORLD[W_FRONT_SONAR]), qos=0, retain=True)
+            #MQTT.mqttc.publish("/RPiMower/World/BackUS", WORLD[WORLD_BACK_SONAR], qos=0, retain=True)
+            MQTT.mqttc.publish("/RPiMower/World/GroundColor", WORLD[WORLD_GROUND_COLOR], qos=0, retain=True)
             k = 1
         if Stop and running:
             move.stop()
