@@ -24,11 +24,11 @@ def get_colour_name(rgb):
         hue = hue + 360
     if std < 0.055:
         if mean > 0.85:
-            colour = "weiss"
+            colour = "white"
         elif mean < 0.15:
-            colour = "schwarz"
+            colour = "black"
         else:
-            colour = "grau"
+            colour = "grey"
     elif (hue > 50) and (hue <= 160):
         colour = "green"
     elif (hue > 160) and (hue <= 250):
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                          stream.seek(0)
                          RGBavg = stream.array.mean(axis=0).mean(axis=0)
                          colour = get_colour_name(RGBavg)
-                         MQTT.mqttc.publish("/RPiMower/Ground_Color", colour)
+                         MQTT.mqttc.publish("/RPiMower/Ground_Colour", colour)
 
     # interrupt
     except KeyboardInterrupt:

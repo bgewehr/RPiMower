@@ -14,6 +14,7 @@ import numpy as np
 # import RPiMower actions
 import lib_l298n as move
 import act_uln2003 as VSS
+import act_esc as ESC
 
 # import RPiMower libraries
 import lib_mqtt as MQTT
@@ -36,7 +37,7 @@ Stop = False
 
 MIN_DISTANCE = 20
 
-WORLD = ["FrontUS",0,"BackUS",0,"GroundColor",0, "Compass",0, "map",[]]
+WORLD = ["FrontUS",0,"BackUS",0,"GroundColour",0, "Compass",0, "map",[]]
 W_FRONT_SONAR = 1
 W_BACK_SONAR = 1
 W_BACK_SONAR = 3
@@ -109,7 +110,7 @@ def on_message(mosq, obj, msg):
     if topicparts[2] == "FrontUS":
         WORLD[W_FRONT_SONAR] = msg.payload
 
-    if topicparts[2] == "Ground_Color":
+    if topicparts[2] == "Ground_Colour":
         WORLD[W_GROUND_COLOUR] = msg.payload
 
     if topicparts[2] == "Compass":
@@ -149,7 +150,7 @@ def detect_blocking(point):
 
 def compass_turn(target):
     DC = 100
-    while abs(target - WORLD[W_COMPASS]) > 3:
+    while 356 > abs(target - WORLD[W_COMPASS]) > 4:
         print "from - to: ", WORLD[W_COMPASS], target
         if WORLD[W_COMPASS] < target:
             if abs(WORLD[W_COMPASS] - target)<180:
@@ -165,9 +166,9 @@ def compass_turn(target):
             else:
                 #Rechtsrum ist kuerzester Weg
                 move.right180(DC, DC)
-        time.sleep(0.025)
+        time.sleep(0.015)
         move.stop()
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 def build_map():
     global WORLD
@@ -185,14 +186,12 @@ def build_map():
         print "Turning to angle: ", target
         compass_turn(target)
         print "World Map: ", target, WORLD[W_FRONT_SONAR]
-        WORLD[W_MAP].append([target, WORLD[W_FRONT_SONAR]])
+        WORLD[W_MAP].append([target, float(WORLD[W_FRONT_SONAR])+47])
     #print WORLD[W_MAP]
     WORLD_CARTESIAN = [[int(np.cos(np.radians(i[0]))*float(i[1])*10)/10, int(np.sin(np.radians(i[0]))*float(i[1])*10)/10] for i in WORLD[W_MAP]]
     #print WORLD_CARTESIAN
     MQTT.mqttc.publish("/RPiMower/World/Cartesian", str(WORLD_CARTESIAN))
     move.stop()
-    Stop = True
-
 
 def return_home():
     global Stop
@@ -226,16 +225,18 @@ def mow():
             MQTT.mqttc.publish("/RPiMower/World/Compass", str(WORLD[W_COMPASS]), qos=0, retain=True)
             MQTT.mqttc.publish("/RPiMower/World/FrontUS", str(WORLD[W_FRONT_SONAR]), qos=0, retain=True)
             #MQTT.mqttc.publish("/RPiMower/World/BackUS", WORLD[WORLD_BACK_SONAR], qos=0, retain=True)
-            MQTT.mqttc.publish("/RPiMower/World/GroundColor", WORLD[WORLD_GROUND_COLOR], qos=0, retain=True)
+            MQTT.mqttc.publish("/RPiMower/World/GroundColour", WORLD[W_GROUND_COLOUR], qos=0, retain=True)
             k = 1
         if Stop and running:
             move.stop()
             print "Stopping..."
             running = False
             VSS.off([5])
+            ESC.setThrottle(7.5)
         elif not running:
             move.forward()
             VSS.on([5])
+            ESC.setThrottle(8)
             print "Running forward"
             running = True
 
@@ -255,6 +256,7 @@ for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
 # Initialise our libraries
 move.init()
 VSS.init([5])
+ESC.init(12)
 MQTT.init()
 MQTT.mqttc.on_message = on_message
 MQTT.mqttc.subscribe(MQTT_TOPIC_IN, qos=MQTT_QOS)

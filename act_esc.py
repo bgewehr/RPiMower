@@ -13,10 +13,10 @@ def init(pin):
     pwm=GPIO.PWM(pin,50)
     pwm.start(7.5)
     time.sleep(1)
-    pwm.ChangeDutyCycle(12.5)
-    time.sleep(1)
-    pwm.ChangeDutyCycle(7.5)
-    time.sleep(1)
+    #pwm.ChangeDutyCycle(11)
+    #time.sleep(1)
+    #pwm.ChangeDutyCycle(7.5)
+    #time.sleep(1)
 
 def cleanup():
     pwm.stop()
@@ -25,7 +25,7 @@ def cleanup():
 def setThrottle(pct):
     pwm.ChangeDutyCycle(pct)
 
-init(12)
-#setThrottle(10)
-time.sleep(5)
-cleanup()
+#init(12)
+#setThrottle(11)
+#time.sleep(5)
+#cleanup()

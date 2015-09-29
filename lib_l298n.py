@@ -14,7 +14,7 @@ def init():
     global GPIO_leftwheelPWM
     GPIO_leftwheelPWM = 24
     global GPIO_leftwheelDC
-    GPIO_leftwheelDC = 100
+    GPIO_leftwheelDC = 75
 
     # Setup GPIO variables for right wheel
     global GPIO_rightwheel
@@ -24,7 +24,7 @@ def init():
     global GPIO_rightwheelPWM
     GPIO_rightwheelPWM = 27
     global GPIO_rightwheelDC
-    GPIO_rightwheelDC = 98
+    GPIO_rightwheelDC = 75
 
     global PWMFrequency
     PWMFrequency = 1500
@@ -124,7 +124,7 @@ def turn(angle):
     stop()
     time.sleep(0.05)
     backward()
-    time.sleep(1.5)
+    time.sleep(1.7)
     stop()
     time.sleep(0.05)
     if angle < 0:
