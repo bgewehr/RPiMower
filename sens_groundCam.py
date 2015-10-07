@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 __author__ = 'mp911de'
 
 import time

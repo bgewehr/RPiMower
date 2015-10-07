@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 __author__ = 'Bernd Gewehr'
 
 import time

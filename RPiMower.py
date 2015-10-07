@@ -37,13 +37,14 @@ Stop = False
 
 MIN_DISTANCE = 20
 
-WORLD = ["FrontUS",0,"BackUS",0,"GroundColour",0, "Compass",0, "map",[]]
+WORLD = ["FrontUS",0,"BackUS",0,"GroundColour",0, "Compass",0, "Pitch",0, "Roll",0, "map",[]]
 W_FRONT_SONAR = 1
-W_BACK_SONAR = 1
 W_BACK_SONAR = 3
 W_GROUND_COLOUR = 5
 W_COMPASS = 7
-W_MAP = 9
+W_PITCH = 9
+W_ROLL = 11
+W_MAP = 13
 
 data=[]
 
@@ -115,6 +116,12 @@ def on_message(mosq, obj, msg):
 
     if topicparts[2] == "Compass":
         WORLD[W_COMPASS] = int(float(msg.payload))
+
+    if topicparts[2] == "Pitch":
+        WORLD[W_PITCH] = int(float(msg.payload))
+
+    if topicparts[2] == "Roll":
+        WORLD[W_ROLL] = int(float(msg.payload))
         
 # End of MQTT callbacks
 
@@ -166,9 +173,9 @@ def compass_turn(target):
             else:
                 #Rechtsrum ist kuerzester Weg
                 move.right180(DC, DC)
-        time.sleep(0.015)
+        time.sleep(0.02)
         move.stop()
-        time.sleep(0.05)
+        time.sleep(0.02)
 
 def build_map():
     global WORLD
@@ -240,7 +247,15 @@ def mow():
             print "Running forward"
             running = True
 
-        if blocking or (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE) or (WORLD[W_GROUND_COLOUR] == "blue"):
+        if abs(WORLD[W_PITCH])>25:
+            print "Stopping mower, RPiMower pitched at ", WORLD[PITCH]
+            ESC.setThrottle(7.5)
+
+        if abs(WORLD[W_ROLL])>25:
+            print "Stopping mower, RPiMower rolled at ", WORLD[PITCH]
+            ESC.setThrottle(7.5)
+
+        if blocking or (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE) or not (WORLD[W_GROUND_COLOUR] == "green"):
             print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
             print "Front obstacle detected, turning..."
             move.stop()
