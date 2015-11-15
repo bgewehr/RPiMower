@@ -7,6 +7,7 @@ import time
 import lib_mqtt as MQTT
 from lib_hcsr04 import setup_gpio, get_distance, cleanup
 import os
+import sys
 
 DEBUG = False
 

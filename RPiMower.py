@@ -152,12 +152,12 @@ def detect_blocking(point):
         return False
 
     std = np.std(np.array(data).astype(np.float))
-
-    return std < 1
+    print std, data
+    return std < 0.2
 
 def compass_turn(target):
-    DC = 100
-    while 356 > abs(target - WORLD[W_COMPASS]) > 4:
+    DC = 90
+    while 352 > abs(target - WORLD[W_COMPASS]) > 8:
         print "from - to: ", WORLD[W_COMPASS], target
         if WORLD[W_COMPASS] < target:
             if abs(WORLD[W_COMPASS] - target)<180:
@@ -220,9 +220,8 @@ def mow():
     blocking = False
     running = False
     k = 0
-    build_map()
     while True:
-        time.sleep(0.05)
+        time.sleep(0.08)
         blocking = detect_blocking(WORLD[W_FRONT_SONAR])
         k = k + 1
         if k == 10:
@@ -255,7 +254,7 @@ def mow():
             print "Stopping mower, RPiMower rolled at ", WORLD[PITCH]
             ESC.setThrottle(7.5)
 
-        if blocking or (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE) or not (WORLD[W_GROUND_COLOUR] == "green"):
+        if blocking or (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE) or (WORLD[W_GROUND_COLOUR] == "blue"):
             print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
             print "Front obstacle detected, turning..."
             move.stop()
@@ -277,5 +276,5 @@ MQTT.mqttc.on_message = on_message
 MQTT.mqttc.subscribe(MQTT_TOPIC_IN, qos=MQTT_QOS)
 
 # start main procedure
+build_map()
 mow()
-# build_map()

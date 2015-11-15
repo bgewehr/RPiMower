@@ -10,23 +10,23 @@ def init():
 
     # Setup GPIO variables for left wheel
     global GPIO_leftwheel
-    GPIO_leftwheel = 17
+    GPIO_leftwheel = 22
     global GPIO_leftwheelDIR
-    GPIO_leftwheelDIR = 18
+    GPIO_leftwheelDIR = 23
     global GPIO_leftwheelPWM
-    GPIO_leftwheelPWM = 24
+    GPIO_leftwheelPWM = 27
     global GPIO_leftwheelDC
     GPIO_leftwheelDC = 100
 
     # Setup GPIO variables for right wheel
     global GPIO_rightwheel
-    GPIO_rightwheel = 22
+    GPIO_rightwheel = 17
     global GPIO_rightwheelDIR
-    GPIO_rightwheelDIR = 23
+    GPIO_rightwheelDIR = 18
     global GPIO_rightwheelPWM
-    GPIO_rightwheelPWM = 27
+    GPIO_rightwheelPWM = 24
     global GPIO_rightwheelDC
-    GPIO_rightwheelDC = 100
+    GPIO_rightwheelDC =100
 
     global PWMFrequency
     PWMFrequency = 1500
@@ -51,10 +51,10 @@ def cleanup():
 
 def forward():
     # forward
-    GPIO.output(GPIO_leftwheel, True)
-    GPIO.output(GPIO_leftwheelDIR, False)
-    GPIO.output(GPIO_rightwheel, True)
-    GPIO.output(GPIO_rightwheelDIR, False)
+    GPIO.output(GPIO_leftwheel, False)
+    GPIO.output(GPIO_leftwheelDIR, True)
+    GPIO.output(GPIO_rightwheel, False)
+    GPIO.output(GPIO_rightwheelDIR, True)
     pwmleft.ChangeDutyCycle(GPIO_leftwheelDC)	
     pwmright.ChangeDutyCycle(GPIO_rightwheelDC)	
 
@@ -69,17 +69,17 @@ def stop():
 
 def backward():
    # backward
-    GPIO.output(GPIO_leftwheel, False)
-    GPIO.output(GPIO_leftwheelDIR, True)
-    GPIO.output(GPIO_rightwheel, False)
-    GPIO.output(GPIO_rightwheelDIR, True)
+    GPIO.output(GPIO_leftwheel, True)
+    GPIO.output(GPIO_leftwheelDIR, False)
+    GPIO.output(GPIO_rightwheel, True)
+    GPIO.output(GPIO_rightwheelDIR, False)
     pwmleft.ChangeDutyCycle(GPIO_leftwheelDC)	
     pwmright.ChangeDutyCycle(GPIO_rightwheelDC)	
 
 def right90():
     # left wheel forward, right wheel stop
-    GPIO.output(GPIO_leftwheel, True)
-    GPIO.output(GPIO_leftwheelDIR, False)
+    GPIO.output(GPIO_leftwheel, False)
+    GPIO.output(GPIO_leftwheelDIR, True)
     GPIO.output(GPIO_rightwheel, False)
     GPIO.output(GPIO_rightwheelDIR, False)
     pwmleft.ChangeDutyCycle(GPIO_leftwheelDC)	
@@ -89,26 +89,13 @@ def left90():
     # right wheel forward, left whell stop
     GPIO.output(GPIO_leftwheel, False)
     GPIO.output(GPIO_leftwheelDIR, False)
-    GPIO.output(GPIO_rightwheel, True)
-    GPIO.output(GPIO_rightwheelDIR, False)
+    GPIO.output(GPIO_rightwheel, False)
+    GPIO.output(GPIO_rightwheelDIR, True)
     pwmleft.ChangeDutyCycle(GPIO_leftwheelDC)	
     pwmright.ChangeDutyCycle(GPIO_rightwheelDC)	
 
 def right180(leftDC = 0, rightDC = 0):
     # left wheel forward, left wheel backward
-    if leftDC == 0:
-        leftDC = GPIO_leftwheelDC
-    if rightDC == 0:
-       rightDC = GPIO_rightwheelDC
-    GPIO.output(GPIO_leftwheel, True)
-    GPIO.output(GPIO_leftwheelDIR, False)
-    GPIO.output(GPIO_rightwheel, False)
-    GPIO.output(GPIO_rightwheelDIR, True)
-    pwmleft.ChangeDutyCycle(leftDC)
-    pwmright.ChangeDutyCycle(rightDC)
-
-def left180(leftDC = 0, rightDC = 0):
-    # left wheel backward, right wheel forward
     if leftDC == 0:
         leftDC = GPIO_leftwheelDC
     if rightDC == 0:
@@ -120,13 +107,28 @@ def left180(leftDC = 0, rightDC = 0):
     pwmleft.ChangeDutyCycle(leftDC)
     pwmright.ChangeDutyCycle(rightDC)
 
+def left180(leftDC = 0, rightDC = 0):
+    # left wheel backward, right wheel forward
+    if leftDC == 0:
+        leftDC = GPIO_leftwheelDC
+    if rightDC == 0:
+       rightDC = GPIO_rightwheelDC
+    GPIO.output(GPIO_leftwheel, True)
+    GPIO.output(GPIO_leftwheelDIR, False)
+    GPIO.output(GPIO_rightwheel, False)
+    GPIO.output(GPIO_rightwheelDIR, True)
+    pwmleft.ChangeDutyCycle(leftDC)
+    pwmright.ChangeDutyCycle(rightDC)
+
 def turn(angle):
     if not angle:
         angle = 1.5
+    else:
+        angle = angle + 0.15
     stop()
     time.sleep(0.05)
     backward()
-    time.sleep(1.7)
+    time.sleep(0.75)
     stop()
     time.sleep(0.05)
     if angle < 0:

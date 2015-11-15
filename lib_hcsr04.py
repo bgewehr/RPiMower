@@ -20,9 +20,9 @@ def setup_gpio(gpio_trigger, gpio_echo):
     global data
     data = []
 
-def percentile_based_outlier(point, threshold=95):
+def percentile_based_outlier(point, threshold=5):
 
-    while len(data) > 10:
+    while len(data) > 5:
         data.pop()
 
     data.insert(0,point)
@@ -30,9 +30,9 @@ def percentile_based_outlier(point, threshold=95):
     if len(data) < 3:
         return False
 
-    diff = (100 - threshold) / 2.0
-    minval, maxval = np.percentile(data, [diff, 100 - diff])
-    return (data < minval) | (data > maxval)
+    std = np.std(np.array(data).astype(np.float))
+
+    return std < threshold
 
 def get_distance_value():
     # Trigger High
@@ -52,8 +52,8 @@ def get_distance_value():
 
 def get_distance():
     distance = get_distance_value()
-    #while percentile_based_outlier(distance):
-    #    distance = get_distance_value()
+    while not percentile_based_outlier(distance):
+        distance = get_distance_value()
     return distance
 
 
