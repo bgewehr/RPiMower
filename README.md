@@ -23,3 +23,4 @@ The main idea is to have a world describing variable in the main program which g
 
 This way I got a high resolution parallel working sensor network with low complexity and cpu consumption.
 
+![https://cloud.githubusercontent.com/assets/4056277/12776336/75598158-ca55-11e5-944a-5f90df71efbf.jpeg](Foto)
