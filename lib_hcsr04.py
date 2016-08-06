@@ -20,7 +20,7 @@ def setup_gpio(gpio_trigger, gpio_echo):
     global data
     data = []
 
-def percentile_based_outlier(point, threshold=5):
+def percentile_based_outlier(point, threshold=50):
 
     while len(data) > 5:
         data.pop()

@@ -16,7 +16,7 @@ def init():
     global GPIO_leftwheelPWM
     GPIO_leftwheelPWM = 27
     global GPIO_leftwheelDC
-    GPIO_leftwheelDC = 100
+    GPIO_leftwheelDC = 20
 
     # Setup GPIO variables for right wheel
     global GPIO_rightwheel
@@ -26,10 +26,10 @@ def init():
     global GPIO_rightwheelPWM
     GPIO_rightwheelPWM = 24
     global GPIO_rightwheelDC
-    GPIO_rightwheelDC =100
+    GPIO_rightwheelDC =20
 
     global PWMFrequency
-    PWMFrequency = 1500
+    PWMFrequency = 1000
 
     # Initialize GPIO PINS and PWM
     GPIO.setup(GPIO_leftwheel, GPIO.OUT)

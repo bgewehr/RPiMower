@@ -20,6 +20,7 @@ imu_controller = imu.IMU(bus, 0x68, 0x1e, "IMU")
 imu_controller.set_compass_offsets(-8, -200, -8)
 
 DEBUG = False
+#DEBUG = True
 
 if __name__ == '__main__':
     #os.nice(10)
@@ -34,8 +35,8 @@ if __name__ == '__main__':
                 print ("\rRoll: " + str(degrees(compass[1])-6.6))
 
             MQTT.mqttc.publish("/RPiMower/Compass", str(degrees(compass[2])+19))
-            MQTT.mqttc.publish("/RPiMower/pitch", str(degrees(compass[0])-6.6))
-            MQTT.mqttc.publish("/RPiMower/roll", str(degrees(compass[1])))
+            MQTT.mqttc.publish("/RPiMower/Pitch", str(degrees(compass[0])-6.6))
+            MQTT.mqttc.publish("/RPiMower/Roll", str(degrees(compass[1])))
 
     # interrupt
     except KeyboardInterrupt:

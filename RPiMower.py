@@ -11,8 +11,10 @@ import time
 import random
 import numpy as np
 
-# import RPiMower actions
+# import RPiMower libraries
 import lib_l298n as move
+
+# import RPiMower actions
 import act_uln2003 as VSS
 import act_esc as ESC
 
@@ -23,7 +25,7 @@ import lib_mqtt as MQTT
 APPNAME = os.path.splitext(os.path.basename(__file__))[0]
 LOGFILE = os.getenv('LOGFILE', APPNAME + '.log')
 
-DEBUG = True
+DEBUG = False
 
 MQTT_TOPIC_IN = "/RPiMower/#"
 MQTT_QOS = 0
@@ -37,7 +39,7 @@ Stop = False
 
 MIN_DISTANCE = 20
 
-WORLD = ["FrontUS",0,"BackUS",0,"GroundColour",0, "Compass",0, "Pitch",0, "Roll",0, "map",[]]
+WORLD = ["FrontUS",0,"BackUS",0,"GroundColour",0, "Compass",0, "Pitch",0, "Roll",0, "map",[], "UserCMD","","Running",0]
 W_FRONT_SONAR = 1
 W_BACK_SONAR = 3
 W_GROUND_COLOUR = 5
@@ -45,6 +47,11 @@ W_COMPASS = 7
 W_PITCH = 9
 W_ROLL = 11
 W_MAP = 13
+W_USERCMD = 15
+W_RUNNING = 17
+
+WEST_FENCE = 90
+NORTH_FENCE = 180
 
 data=[]
 
@@ -65,42 +72,33 @@ logging.info("INFO MODE")
 logging.debug("DEBUG MODE")
 logging.debug("LOGFILE = %s" % LOGFILE)
 
+def output():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print "FrontUS: %-5s Compass: %-5s\nPitch: %-5s Roll: %-5s\nGroundCOLOR: %-5s\nRunning: %-5s" % (WORLD[W_FRONT_SONAR], WORLD[W_COMPASS], WORLD[W_PITCH], WORLD[W_ROLL], WORLD[W_GROUND_COLOUR], WORLD[W_RUNNING]), "\n"
+
 def on_message(mosq, obj, msg):
     """
     Handle incoming messages
     """
-    global Stop 
-    
-    # if DEBUG:
-    #     print msg.topic 
-    #     print msg.payload
+
+    if DEBUG:
+        print msg.topic, msg.payload
 
     if msg.topic == START:
         logging.debug("RPiMower start...")
-        print ("RPiMower start...")
-        Stop = False
-        return
+        WORLD[W_USERCMD] = "start"
 
-    if msg.topic == STOP:
+    elif msg.topic == STOP:
         logging.debug("RPiMower stop...")
-        print ("RPiMower stop...")
-        move.stop()
-        Stop = True
-        return
+        WORLD[W_USERCMD] = "stop"
 
-    if msg.topic == TURN:
+    elif msg.topic == TURN:
         logging.debug("RPiMower turn...")
-        print ("RPiMower turn...")
-        move.turn()
-        return
+        WORLD[W_USERCMD] = "turn"
 
-    if msg.topic == HOME:
+    elif msg.topic == HOME:
         logging.debug("RPiMower return...")
-        print ("RPiMower return...")
-        return_home()
-        return
-
-
+        WORLD[W_USERCMD] = "return"
         
     topicparts = msg.topic.split("/")
     
@@ -152,12 +150,13 @@ def detect_blocking(point):
         return False
 
     std = np.std(np.array(data).astype(np.float))
-    print std, data
-    return std < 0.2
+    #print std, data
+    return std < 0.5
 
 def compass_turn(target):
-    DC = 90
-    while 352 > abs(target - WORLD[W_COMPASS]) > 8:
+    DC = 20
+    while abs(target - WORLD[W_COMPASS]) > 20:
+        output()
         print "from - to: ", WORLD[W_COMPASS], target
         if WORLD[W_COMPASS] < target:
             if abs(WORLD[W_COMPASS] - target)<180:
@@ -176,91 +175,173 @@ def compass_turn(target):
         time.sleep(0.02)
         move.stop()
         time.sleep(0.02)
+	
+def compass_turn_rel(angle):
+    compass_turn(WORLD[W_COMPASS] + angle)
 
 def build_map():
     global WORLD
-    global Stop
     move.stop()
     # wait for the first real compass result
     time.sleep(2)
     current_angle = WORLD[W_COMPASS]
     print "Starting at angle: ", current_angle
-    for angle in range(current_angle, current_angle + 359, 2):
+    for angle in range(current_angle, current_angle + 359, 10):
         if angle > 360:
             target = angle - 360
         else:
             target = angle
         print "Turning to angle: ", target
         compass_turn(target)
-        print "World Map: ", target, WORLD[W_FRONT_SONAR]
-        WORLD[W_MAP].append([target, float(WORLD[W_FRONT_SONAR])+47])
+        output()
+        print "World Map: ", WORLD[W_COMPASS], WORLD[W_FRONT_SONAR]
+        WORLD[W_MAP].append([WORLD[W_COMPASS], float(WORLD[W_FRONT_SONAR])+47])
     #print WORLD[W_MAP]
     WORLD_CARTESIAN = [[int(np.cos(np.radians(i[0]))*float(i[1])*10)/10, int(np.sin(np.radians(i[0]))*float(i[1])*10)/10] for i in WORLD[W_MAP]]
     #print WORLD_CARTESIAN
     MQTT.mqttc.publish("/RPiMower/World/Cartesian", str(WORLD_CARTESIAN))
     move.stop()
+    WORLD[W_USERCMD]="start"
 
 def return_home():
     global Stop
+
     move.stop()
-    time.sleep(0.5)
-    move.backward()
-    time.sleep(0.5)
+
+    compass_turn(NORTH_FENCE)
+
+    i = float(WORLD[W_FRONT_SONAR]) 
+ 
+    while (i < 50.0):
+        output()
+        i = float(WORLD[W_FRONT_SONAR]) 
+        print "Getting in 50cm distance to north fence. Current distance: ", i
+        time.sleep(.05)
+        if (abs(WORLD[W_COMPASS] - NORTH_FENCE) > 15):
+            compass_turn(NORTH_FENCE)
+        move.backward()
+
     move.stop()
-    compass_turn(5)
-    move.forward()
-    time.sleep(0.5)
+
+    while (i > 50.0):
+        output()
+        i = float(WORLD[W_FRONT_SONAR]) 
+        print "Getting in 50cm distance to north fence. Current distance: ", i
+	time.sleep(.05)
+        if (abs(WORLD[W_COMPASS] - NORTH_FENCE) > 15):
+            compass_turn(NORTH_FENCE)
+        move.forward()
+
     move.stop()
-    Stop = true
+
+    compass_turn(WEST_FENCE)
+
+  
+    while (i > 15.0):
+        output()
+        print "Getting in 15cm distance to west fence. Current distance: ", i
+        i = float(WORLD[W_FRONT_SONAR]) 
+        time.sleep(.05)
+        if (abs(WORLD[W_COMPASS] - WEST_FENCE - 90) > 10):
+            compass_turn(WEST_FENCE - 90)
+        move.forward()
+
+    move.stop()
+
+    compass_turn(WEST_FENCE + 90)
+
+    while i > 15.0:
+        output()
+        print "Getting in 50cm distance to north fence. Current distance: ", i
+        i = float(WORLD[W_FRONT_SONAR]) 
+        time.sleep(.05)
+        if (abs(WORLD[W_COMPASS] - WEST_FENCE + 90) > 10):
+            compass_turn(WEST_FENCE + 90)
+        move.forward()
+
+    move.stop()
+
+    compass_turn_rel(180)
+    Stop = True
 
 def mow():
     """
     The main loop in which we mow the lawn.
     """
+    global Stop
+
     blocking = False
     running = False
+ 
+    #Sendeverzoegerung fuer MQTT
     k = 0
+
+    #Zaehler fuer die Maehdauer
+    m = 0
+
     while True:
-        time.sleep(0.08)
-        blocking = detect_blocking(WORLD[W_FRONT_SONAR])
+        output()
+        time.sleep(0.05)
+
         k = k + 1
-        if k == 10:
-            #if DEBUG:
-            print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
-            #MQTT.mqttc.publish("/RPiMower/World/Polar", str(WORLD[W_MAP]), qos=0, retain=True)
+        m = m + 1
+
+        if k == 50: #update WORLD information on MQTT every 50 loops
+            if DEBUG:
+                print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking, m
+            MQTT.mqttc.publish("/RPiMower/World/Polar", str(WORLD[W_MAP]), qos=0, retain=True)
             MQTT.mqttc.publish("/RPiMower/World/Compass", str(WORLD[W_COMPASS]), qos=0, retain=True)
             MQTT.mqttc.publish("/RPiMower/World/FrontUS", str(WORLD[W_FRONT_SONAR]), qos=0, retain=True)
             #MQTT.mqttc.publish("/RPiMower/World/BackUS", WORLD[WORLD_BACK_SONAR], qos=0, retain=True)
             MQTT.mqttc.publish("/RPiMower/World/GroundColour", WORLD[W_GROUND_COLOUR], qos=0, retain=True)
             k = 1
-        if Stop and running:
-            move.stop()
-            print "Stopping..."
-            running = False
-            VSS.off([5])
+
+        if WORLD[W_USERCMD] <> "":
+            if WORLD[W_USERCMD] == "start":
+                print "Command 'Start' received. Starting mower"
+                move.forward()
+                VSS.on([5])
+                ESC.setThrottle(8.5)
+                WORLD[W_RUNNING] = True
+            elif WORLD[W_USERCMD] == "stop":
+                print "Command 'Stop' received. Stopping mower"
+                move.stop()
+                VSS.off([5])
+                ESC.setThrottle(7.5)
+                WORLD[W_RUNNING] = False
+            elif WORLD[W_USERCMD] == "turn":
+                print "Usercommand 'turn' received. Turning mower 20*"
+                move.turn(20)
+            elif WORLD[W_USERCMD] == "return":
+                print "Usercommand 'return' received. Return mower to home base"
+                return_home()
+            WORLD[W_USERCMD] = ""
+
+        blocking = False;
+        detect_blocking(WORLD[W_FRONT_SONAR])
+        obstacle = (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE)
+        off_field = False;
+        #(WORLD[W_GROUND_COLOUR] != 'green')
+        tilt = ((abs(WORLD[W_PITCH]) > 35) or (abs(WORLD[W_ROLL]) > 35))
+
+        if tilt:
+            print "Stopping mower, RPiMower pitched at ", WORLD[W_PITCH]
             ESC.setThrottle(7.5)
-        elif not running:
+            move.stop()
+
+        if blocking or obstacle or off_field:
+            if DEBUG:
+                print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
+            print "Front obstacle detected or left the green, turning...", blocking, obstacle, off_field
+            move.stop()
+            VSS.off([5])
+            move.turn(random.uniform(-1.0,1.0))
             move.forward()
-            VSS.on([5])
-            ESC.setThrottle(8)
-            print "Running forward"
-            running = True
 
-        if abs(WORLD[W_PITCH])>25:
-            print "Stopping mower, RPiMower pitched at ", WORLD[PITCH]
-            ESC.setThrottle(7.5)
-
-        if abs(WORLD[W_ROLL])>25:
-            print "Stopping mower, RPiMower rolled at ", WORLD[PITCH]
-            ESC.setThrottle(7.5)
-
-        if blocking or (float(WORLD[W_FRONT_SONAR]) < MIN_DISTANCE) or (WORLD[W_GROUND_COLOUR] == "blue"):
-            print WORLD[W_FRONT_SONAR], WORLD[W_GROUND_COLOUR], blocking
-            print "Front obstacle detected, turning..."
+        if m > 1000000: 
+            print "Mowing max time reached, exiting!"
             move.stop()
-            VSS.off([5])
-            move.turn(random.uniform(-2.0,2.0))
-            running = False
+            return
     move.stop()
 
 # Use the signal module to handle signals
@@ -278,3 +359,4 @@ MQTT.mqttc.subscribe(MQTT_TOPIC_IN, qos=MQTT_QOS)
 # start main procedure
 build_map()
 mow()
+#return_home()

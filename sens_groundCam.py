@@ -3,7 +3,7 @@
 __author__ = 'mp911de'
 
 import time
-import os
+import os,sys
 import picamera
 import picamera.array
 import time
